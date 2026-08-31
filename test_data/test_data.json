@@ -1,0 +1,88 @@
+{
+  "valid_users": {
+    "ids": [1, 2, 3, 5, 7, 10],
+    "description": "User IDs known to exist in JSONPlaceholder"
+  },
+  "invalid_users": {
+    "ids": [0, -1, 999999, 9999999],
+    "description": "User IDs that should return 404"
+  },
+  "boundary_user_ids": {
+    "min_valid": 1,
+    "max_valid": 10,
+    "below_min": 0,
+    "above_max": 11,
+    "far_above_max": 999999
+  },
+  "valid_posts": {
+    "ids": [1, 2, 50, 100],
+    "description": "Post IDs known to exist"
+  },
+  "invalid_posts": {
+    "ids": [0, -1, 101, 999999],
+    "description": "Post IDs that should return 404"
+  },
+  "new_post_payload": {
+    "title": "WebTestX Automated Test Post",
+    "body": "This post was created by the WebTestX test automation framework.",
+    "userId": 1
+  },
+  "updated_post_payload": {
+    "id": 1,
+    "title": "WebTestX Updated Post Title",
+    "body": "This post was updated by the WebTestX test automation framework.",
+    "userId": 1
+  },
+  "security_payloads": {
+    "xss": [
+      "<script>alert('xss')</script>",
+      "\"><script>alert(1)</script>",
+      "<img src=x onerror=alert(1)>",
+      "javascript:alert(1)"
+    ],
+    "sql_injection": [
+      "' OR '1'='1",
+      "'; DROP TABLE users; --",
+      "1' OR '1' = '1' /*",
+      "admin'--",
+      "1; SELECT * FROM users"
+    ],
+    "oversized_input": "A",
+    "special_characters": [
+      "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+      "\u0000\u0001\u0002",
+      "../../etc/passwd",
+      "%00",
+      "null",
+      "undefined",
+      "NaN",
+      "Infinity"
+    ],
+    "empty_values": ["", " ", "   ", "\t", "\n"]
+  },
+  "expected_user_fields": ["id", "name", "username", "email", "address", "phone", "website", "company"],
+  "expected_post_fields": ["id", "userId", "title", "body"],
+  "expected_comment_fields": ["id", "postId", "name", "email", "body"],
+  "expected_todo_fields": ["id", "userId", "title", "completed"],
+  "endpoints": {
+    "users": "/users",
+    "posts": "/posts",
+    "comments": "/comments",
+    "todos": "/todos",
+    "albums": "/albums",
+    "photos": "/photos"
+  },
+  "invalid_endpoints": [
+    "/nonexistent",
+    "/users/abc",
+    "/users/!@#",
+    "/../../../etc/passwd",
+    "/users?id=<script>"
+  ],
+  "ui": {
+    "books_site_url": "https://books.toscrape.com",
+    "expected_title_contains": "Books to Scrape",
+    "expected_categories": ["Travel", "Mystery", "Historical Fiction", "Science Fiction", "Romance"],
+    "search_terms": ["mystery", "travel", "fiction"]
+  }
+}

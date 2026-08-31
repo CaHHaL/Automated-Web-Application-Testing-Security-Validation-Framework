@@ -1,0 +1,129 @@
+name: WebTestX — CI/CD Automated Test Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  HEADLESS: "true"
+  BROWSER: "chromium"
+  MAX_RESPONSE_TIME_MS: "5000"
+
+jobs:
+  test:
+    name: Run WebTestX Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      # ────────────────────────────────────────────────────────────────
+      #  1. Check out the repository
+      # ────────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ────────────────────────────────────────────────────────────────
+      #  2. Set up Python
+      # ────────────────────────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ────────────────────────────────────────────────────────────────
+      #  3. Install Python dependencies
+      # ────────────────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ────────────────────────────────────────────────────────────────
+      #  4. Install Playwright browsers
+      # ────────────────────────────────────────────────────────────────
+      - name: Install Playwright browsers
+        run: |
+          playwright install --with-deps chromium
+
+      # ────────────────────────────────────────────────────────────────
+      #  5. Create output directories
+      # ────────────────────────────────────────────────────────────────
+      - name: Create output directories
+        run: |
+          mkdir -p reports screenshots
+
+      # ────────────────────────────────────────────────────────────────
+      #  6. Run API tests
+      # ────────────────────────────────────────────────────────────────
+      - name: Run API tests
+        run: |
+          pytest tests/api/ tests/functional/ -m "api or functional" \
+            --html=reports/api-report.html \
+            --self-contained-html \
+            --tb=short \
+            -v
+        continue-on-error: false
+
+      # ────────────────────────────────────────────────────────────────
+      #  7. Run security validation tests
+      # ────────────────────────────────────────────────────────────────
+      - name: Run security tests
+        run: |
+          pytest tests/security/ -m security \
+            --html=reports/security-report.html \
+            --self-contained-html \
+            --tb=short \
+            -v
+        continue-on-error: true
+
+      # ────────────────────────────────────────────────────────────────
+      #  8. Run regression tests
+      # ────────────────────────────────────────────────────────────────
+      - name: Run regression tests
+        run: |
+          pytest tests/regression/ -m regression \
+            --html=reports/regression-report.html \
+            --self-contained-html \
+            --tb=short \
+            -v
+        continue-on-error: false
+
+      # ────────────────────────────────────────────────────────────────
+      #  9. Run UI tests (headless Chromium)
+      # ────────────────────────────────────────────────────────────────
+      - name: Run UI tests
+        run: |
+          pytest tests/ui/ -m ui \
+            --html=reports/ui-report.html \
+            --self-contained-html \
+            --tb=short \
+            -v
+        continue-on-error: true
+
+      # ────────────────────────────────────────────────────────────────
+      # 10. Generate full combined HTML report
+      # ────────────────────────────────────────────────────────────────
+      - name: Generate combined test report
+        run: |
+          pytest \
+            --html=reports/full-report.html \
+            --self-contained-html \
+            --tb=short \
+            -v
+        continue-on-error: true
+
+      # ────────────────────────────────────────────────────────────────
+      # 11. Upload test reports and screenshots as artifacts
+      # ────────────────────────────────────────────────────────────────
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: webtestx-reports-${{ github.run_number }}
+          path: |
+            reports/
+            screenshots/
+          retention-days: 30
